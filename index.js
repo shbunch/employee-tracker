@@ -9,7 +9,7 @@ const db = mysql.createConnection(
         password: 'rootROOT',
         database: 'employees_db'
     },
-    console.log(`Connected to the movies_db database.`)
+    console.log(`Connected to the employees_db database.`)
 );
 
 function menu() {
@@ -115,7 +115,7 @@ function addRole() {
                 type: "list",
                 name: "id",
                 message: "Pick the department for this role",
-                choices: department
+                choices: departments
             }
         ])
             .then(response => {
@@ -124,6 +124,56 @@ function addRole() {
                     menu()
                 })
             })
+    })
+}
+
+function addEmployee() {
+    db.query("SELECT * FROM role", (err, data) => {
+        const roles = data.map(role => ({
+            title: role.title,
+            salary: role.salary,
+            department: role.department,
+            id: role.id
+        }))
+        db.query("SELECT * FROM employee", (err, data) => {
+            const employees = data.map(employee => ({
+                firstname: employee.first_name,
+                lastname: employee.last_name,
+                role: employee.role_id,
+                manager: employee.manager_id,
+                id: employee.id
+            }))
+            inquirer.prompt([
+                {
+                    type: "input",
+                    name: "firstname",
+                    message: "Enter the employee's first name: "
+                },
+                {
+                    type: "input",
+                    name: "lastname",
+                    message: "Enter the employee's last name: "
+                },
+                {
+                    type: "list",
+                    name: "role",
+                    message: "Pick the role for this employee",
+                    choices: roles
+                },
+                {
+                    type: "list",
+                    name: "manager",
+                    message: "Pick the manager for this employee",
+                    choices: employees
+                }
+            ])
+                .then(response => {
+                    db.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)", [response.firstname, response.lastname, response.role, response.manager], (err, data) => {
+                        console.table(data)
+                        menu()
+                    })
+                })
+        })
     })
 }
 menu();
